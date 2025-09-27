@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>YT Downloader Pro - Free YouTube Video & Audio Downloader</title>
+    <meta
+      name="description"
+      content="Download YouTube videos and audio in HD quality. Fast, free, and secure. Multiple formats: MP4, WebM, MP3, M4A. Mobile-friendly design."
+    />
+
+    <!-- Icons & Manifest -->
+    <link rel="manifest" href="/static/manifest.json" />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/style.css') }}"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <!-- Mobile Header -->
+    <header class="mobile-header">
+      <div class="header-content">
+        <div class="logo-section">
+          <i class="fab fa-youtube brand-icon"></i>
+          <h1 class="brand-name">YT Downloader Pro</h1>
+        </div>
+        <div class="header-controls">
+          <button
+            class="theme-toggle"
+            id="themeToggle"
+            aria-label="Toggle theme"
+          >
+            <i class="fas fa-moon theme-icon-dark"></i>
+            <i class="fas fa-sun theme-icon-light"></i>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <div class="content-container">
+        <!-- Step 1: URL Input -->
+        <section class="step-content active" id="step1">
+          <div class="url-input-section">
+            <h2 class="section-title">
+              <i class="fas fa-link"></i>
+              Enter YouTube URL
+            </h2>
+
+            <div class="input-wrapper">
+              <input
+                type="text"
+                id="videoUrl"
+                class="url-input"
+                placeholder="https://www.youtube.com/watch?v=..."
+                autocomplete="off"
+              />
+              <button class="input-clear" id="clearUrl" style="display: none">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+
+            <button class="primary-btn" id="getInfoBtn">
+              <span class="btn-text">
+                <i class="fas fa-search"></i>
+                Get Video Info
+              </span>
+              <div class="btn-loader" id="getInfoLoader">
+                <div class="spinner"></div>
+              </div>
+            </button>
+
+            <div class="alert alert-error" id="urlError" style="display: none">
+              <i class="fas fa-exclamation-triangle"></i>
+              <span id="urlErrorText"></span>
+            </div>
+          </div>
+        </section>
+
+        <!-- Step 2: Video Preview & Format Selection -->
+        <section class="step-content" id="step2">
+          <div class="back-button">
+            <button class="back-btn" onclick="goToStep(1)">
+              <i class="fas fa-arrow-left"></i>
+              Back
+            </button>
+          </div>
+
+          <!-- Video Preview -->
+          <div class="video-preview" id="videoPreview">
+            <!-- Will be populated by JavaScript -->
+          </div>
+
+          <!-- Download Tabs -->
+          <div class="download-tabs">
+            <button class="tab-btn active" data-tab="video" id="videoTab">
+              <i class="fas fa-video"></i>
+              Download as Video
+            </button>
+            <button class="tab-btn" data-tab="audio" id="audioTab">
+              <i class="fas fa-music"></i>
+              Download as Audio
+            </button>
+          </div>
+
+          <!-- Video Format Selection -->
+          <div class="format-section active" id="videoSection">
+            <h3 class="format-title">
+              <i class="fas fa-video"></i>
+              Video Format & Resolution
+            </h3>
+            <div class="formats-grid" id="videoFormats">
+              <!-- Will be populated by JavaScript -->
+            </div>
+          </div>
+
+          <!-- Audio Format Selection -->
+          <div class="format-section" id="audioSection">
+            <h3 class="format-title">
+              <i class="fas fa-music"></i>
+              Audio Format & Quality
+            </h3>
+            <div class="formats-grid" id="audioFormats">
+              <!-- Will be populated by JavaScript -->
+            </div>
+          </div>
+
+          <div class="download-action">
+            <button class="download-btn" id="downloadBtn" disabled>
+              <i class="fas fa-download"></i>
+              Start Download
+            </button>
+          </div>
+
+          <div class="alert alert-error" id="formatError" style="display: none">
+            <i class="fas fa-exclamation-triangle"></i>
+            <span id="formatErrorText"></span>
+          </div>
+        </section>
+
+        <!-- Step 3: Download Progress -->
+        <section class="step-content" id="step3">
+          <div class="progress-section">
+            <h2 class="section-title">
+              <i class="fas fa-cloud-download-alt"></i>
+              Downloading
+            </h2>
+
+            <div class="progress-card">
+              <div class="progress-circle" id="progressCircle">
+                <div class="progress-inner">
+                  <span class="progress-percent" id="progressPercent">0%</span>
+                </div>
+              </div>
+
+              <div class="progress-details">
+                <div class="progress-status" id="progressStatus">
+                  Starting download...
+                </div>
+
+                <div class="progress-stats">
+                  <div class="stat-item">
+                    <span class="stat-label">Speed:</span>
+                    <span class="stat-value" id="downloadSpeed">--</span>
+                  </div>
+                  <div class="stat-item">
+                    <span class="stat-label">ETA:</span>
+                    <span class="stat-value" id="timeRemaining">--</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Step 4: Download Complete -->
+        <section class="step-content" id="step4">
+          <div class="success-section">
+            <div class="success-icon">
+              <i class="fas fa-check-circle"></i>
+            </div>
+
+            <h2 class="section-title success">Download Complete!</h2>
+            <p class="success-message">Your file is ready for download</p>
+
+            <div class="file-info" id="fileInfo">
+              <!-- Will be populated by JavaScript -->
+            </div>
+
+            <div class="download-actions">
+              <button class="primary-btn" id="finalDownloadBtn">
+                <i class="fas fa-download"></i>
+                Download File
+              </button>
+              <button class="secondary-btn" onclick="startOver()">
+                <i class="fas fa-plus"></i>
+                Download Another
+              </button>
+            </div>
+
+            <div class="cleanup-notice">
+              <i class="fas fa-info-circle"></i>
+              File will be automatically deleted from server for your privacy
+            </div>
+          </div>
+        </section>
+
+        <!-- 🚀 Enhanced Hero Section -->
+        <section class="hero-section" id="heroSection">
+          <div class="hero-content">
+            <div class="hero-badge">
+              <i class="fas fa-shield-check"></i>
+              <span>100% Free & Secure</span>
+            </div>
+
+            <h1 class="hero-title">
+              Download YouTube Videos & Audio
+              <span class="hero-accent">In Seconds</span>
+            </h1>
+
+            <p class="hero-description">
+              Fast, free, and secure YouTube downloader. Support for multiple
+              formats including
+              <strong>MP4, WebM, MP3, M4A</strong> with HD quality up to 1080p.
+            </p>
+
+            <div class="hero-features">
+              <div class="feature-item">
+                <i class="fas fa-download"></i>
+                <span>HD Quality</span>
+              </div>
+              <div class="feature-item">
+                <i class="fas fa-mobile-alt"></i>
+                <span>Mobile Friendly</span>
+              </div>
+              <div class="feature-item">
+                <i class="fas fa-bolt"></i>
+                <span>Super Fast</span>
+              </div>
+              <div class="feature-item">
+                <i class="fas fa-lock"></i>
+                <span>100% Safe</span>
+              </div>
+            </div>
+
+            <button class="hero-cta" onclick="scrollToDownloader()">
+              <i class="fas fa-play"></i>
+              Start Downloading Now
+            </button>
+          </div>
+
+          <div class="hero-visual">
+            <div class="hero-card">
+              <div class="hero-card-header">
+                <div class="hero-card-dots">
+                  <span></span><span></span><span></span>
+                </div>
+                <i class="fab fa-youtube"></i>
+              </div>
+              <div class="hero-card-content">
+                <div class="hero-progress">
+                  <div class="hero-progress-bar"></div>
+                </div>
+                <div class="hero-formats">
+                  <span class="format-tag">MP4</span>
+                  <span class="format-tag">1080p</span>
+                  <span class="format-tag">MP3</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <!-- 🎨 Professional Footer -->
+    <footer class="main-footer">
+      <div class="footer-container">
+        <div class="footer-content">
+          <div class="footer-brand">
+            <div class="footer-logo">
+              <i class="fab fa-youtube"></i>
+              <span>YT Downloader Pro</span>
+            </div>
+            <p class="footer-description">
+              The most reliable and fastest YouTube video and audio downloader.
+              Download your favorite content in HD quality for free.
+            </p>
+            <div class="footer-features">
+              <span class="feature-badge">
+                <i class="fas fa-shield-check"></i>
+                100% Safe
+              </span>
+              <span class="feature-badge">
+                <i class="fas fa-bolt"></i>
+                Super Fast
+              </span>
+              <span class="feature-badge">
+                <i class="fas fa-free-code-camp"></i>
+                Always Free
+              </span>
+            </div>
+          </div>
+
+          <div class="footer-links">
+            <div class="footer-column">
+              <h4>Features</h4>
+              <ul>
+                <li><a href="#heroSection">HD Video Download</a></li>
+                <li><a href="#heroSection">Audio Extraction</a></li>
+                <li><a href="#heroSection">Multiple Formats</a></li>
+                <li><a href="#heroSection">Mobile Friendly</a></li>
+              </ul>
+            </div>
+
+            <div class="footer-column">
+              <h4>Legal</h4>
+              <ul>
+                <li><a href="/privacy" target="_blank">Privacy Policy</a></li>
+                <li><a href="/terms" target="_blank">Terms of Service</a></li>
+                <li><a href="/disclaimer" target="_blank">Disclaimer</a></li>
+                <li><a href="/dmca" target="_blank">DMCA</a></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="footer-bottom">
+          <div class="footer-copyright">
+            <p>&copy; 2024 YT Downloader Pro. All rights reserved.</p>
+            <p class="footer-disclaimer">
+              We do not host any videos. All content is downloaded directly from
+              YouTube servers.
+            </p>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+  </body>
+</html>
