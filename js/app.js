@@ -1,8 +1,11 @@
-// Updated Frontend app.js - Fixed for your current backend URL
-// CRITICAL FIX: Updated backend URL to .up.railway.app
+// FINAL FRONTEND FIX - Updated Backend URL and Enhanced Debugging
+// Updated for Railway's new domain: .up.railway.app
 
-// ✅ CORRECT BACKEND URL (Updated Railway domain)
+// ✅ CORRECT BACKEND URL (Fixed from .railway.app to .up.railway.app)
 const API_BASE_URL = 'https://yt-downloader-pro-v1-dus.up.railway.app';
+
+console.log('🚀 YouTube Downloader Pro Loading...');
+console.log('🔗 Backend API URL:', API_BASE_URL);
 
 class YouTubeDownloader {
     constructor() {
@@ -16,21 +19,11 @@ class YouTubeDownloader {
     }
 
     init() {
-        console.log("🚀 YouTube Downloader Pro initializing...");
-        console.log("🔗 Backend API URL:", API_BASE_URL);
-
+        console.log("🔧 Initializing YouTube Downloader Pro...");
         this.setupTheme();
-
-        // Wait for DOM to be fully loaded
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', () => {
-                this.setupEventListeners();
-            });
-        } else {
-            this.setupEventListeners();
-        }
-
-        console.log("✅ YouTube Downloader Pro initialized successfully");
+        this.setupEventListeners();
+        this.testBackendConnection();
+        console.log("✅ YouTube Downloader Pro initialized successfully!");
     }
 
     setupTheme() {
@@ -58,13 +51,14 @@ class YouTubeDownloader {
 
             urlInput.addEventListener("keypress", (e) => {
                 if (e.key === "Enter") {
+                    console.log("⌨️ Enter key pressed - getting video info");
                     this.getVideoInfo();
                 }
             });
             console.log("✅ URL input listeners added");
         }
 
-        // Clear URL button
+        // Clear URL
         const clearUrl = document.getElementById("clearUrl");
         if (clearUrl) {
             clearUrl.addEventListener("click", () => {
@@ -73,7 +67,7 @@ class YouTubeDownloader {
             console.log("✅ Clear URL listener added");
         }
 
-        // Get video info button - CRITICAL FIX
+        // Get Info Button - CRITICAL FIX
         const getInfoBtn = document.getElementById("getInfoBtn");
         if (getInfoBtn) {
             getInfoBtn.addEventListener("click", (e) => {
@@ -83,7 +77,7 @@ class YouTubeDownloader {
             });
             console.log("✅ Get Info button listener added");
         } else {
-            console.error("❌ Get Info button not found!");
+            console.error("❌ ERROR: Get Info button not found! Check HTML element ID.");
         }
 
         // Download tabs
@@ -93,6 +87,7 @@ class YouTubeDownloader {
                 this.switchTab(tab);
             });
         });
+        console.log("✅ Tab listeners added");
 
         // Download button
         const downloadBtn = document.getElementById("downloadBtn");
@@ -102,7 +97,35 @@ class YouTubeDownloader {
             });
         }
 
-        console.log("✅ All event listeners set up successfully");
+        console.log("🎉 All event listeners set up successfully!");
+    }
+
+    async testBackendConnection() {
+        try {
+            console.log("🔍 Testing backend connection...");
+            console.log("🌐 Backend URL:", API_BASE_URL);
+
+            const response = await fetch(API_BASE_URL + '/health', {
+                method: 'GET',
+                mode: 'cors',
+                headers: {
+                    'Accept': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                console.log("✅ Backend connected successfully:", data);
+                this.showToast("Backend connected successfully!", "success");
+            } else {
+                console.error("❌ Backend health check failed:", response.status, response.statusText);
+                this.showToast("Backend connection issue", "error");
+            }
+        } catch (error) {
+            console.error("❌ Backend connection failed:", error);
+            console.error("🚨 Check if backend URL is correct:", API_BASE_URL);
+            this.showToast("Cannot connect to backend", "error");
+        }
     }
 
     toggleTheme() {
@@ -135,12 +158,16 @@ class YouTubeDownloader {
         const urlInput = document.getElementById("videoUrl");
         const url = urlInput.value.trim();
 
+        console.log("📝 Input URL:", url);
+
         if (!url) {
+            console.log("❌ Empty URL");
             this.showAlert("urlError", "Please enter a YouTube URL");
             return;
         }
 
         if (!this.isValidYouTubeURL(url)) {
+            console.log("❌ Invalid YouTube URL");
             this.showAlert("urlError", "Please enter a valid YouTube URL");
             return;
         }
@@ -148,13 +175,14 @@ class YouTubeDownloader {
         this.hideAlert("urlError");
         this.setButtonLoading("getInfoBtn", true);
 
-        try {
-            console.log("📡 Making API request to:", API_BASE_URL + "/get_video_info");
-            console.log("📝 Request payload:", { url: url });
+        const apiUrl = API_BASE_URL + "/get_video_info";
+        console.log("🔍 Fetching video info from:", apiUrl);
+        console.log("📤 Request payload:", { url: url });
 
-            // ✅ FIXED API CALL with proper error handling
-            const response = await fetch(API_BASE_URL + "/get_video_info", {
+        try {
+            const response = await fetch(apiUrl, {
                 method: "POST",
+                mode: 'cors',
                 headers: {
                     "Content-Type": "application/json",
                     "Accept": "application/json"
@@ -163,7 +191,8 @@ class YouTubeDownloader {
             });
 
             console.log("📊 Response status:", response.status);
-            console.log("📊 Response headers:", [...response.headers.entries()]);
+            console.log("📊 Response ok:", response.ok);
+            console.log("📊 Response headers:", Object.fromEntries(response.headers.entries()));
 
             if (!response.ok) {
                 const errorText = await response.text();
@@ -172,7 +201,7 @@ class YouTubeDownloader {
             }
 
             const data = await response.json();
-            console.log("✅ API Response:", data);
+            console.log("✅ API Response received:", data);
 
             if (data.success) {
                 this.videoData = data;
@@ -180,7 +209,7 @@ class YouTubeDownloader {
                 this.displayFormats(data);
                 this.goToStep(2);
                 this.showToast("Video info loaded successfully!", "success");
-                console.log("✅ Video info loaded successfully");
+                console.log("🎉 Video info processing completed successfully!");
             } else {
                 console.error("❌ API returned error:", data.error);
                 this.showAlert("urlError", data.error || "Failed to get video information");
@@ -188,22 +217,26 @@ class YouTubeDownloader {
 
         } catch (error) {
             console.error('🚨 API Error Details:', error);
+            console.error('🚨 Error name:', error.name);
+            console.error('🚨 Error message:', error.message);
+            console.error('🚨 Full error:', error);
 
             let errorMessage = "Network error. Please try again.";
 
             if (error.message.includes('CORS')) {
-                errorMessage = "CORS error - Backend configuration issue. Please contact support.";
-                console.error("🚨 CORS Error - Backend needs CORS headers fix");
-            } else if (error.message.includes('500')) {
-                errorMessage = "Server error - Backend issue. Please try again later.";
-            } else if (error.message.includes('404')) {
-                errorMessage = "API endpoint not found. Backend may be down.";
+                errorMessage = "CORS error - Backend configuration issue";
+                console.error("🚨 CORS Error detected - Backend needs CORS fix");
             } else if (error.message.includes('Failed to fetch')) {
                 errorMessage = "Cannot connect to backend. Check your internet connection.";
+                console.error("🚨 Fetch failed - Network or backend issue");
+            } else if (error.message.includes('500')) {
+                errorMessage = "Server error - Please try again later";
+            } else if (error.message.includes('404')) {
+                errorMessage = "API endpoint not found";
             }
 
             this.showAlert("urlError", errorMessage);
-            console.error("❌ Final error shown to user:", errorMessage);
+            console.error("💀 Error shown to user:", errorMessage);
 
         } finally {
             this.setButtonLoading("getInfoBtn", false);
@@ -226,10 +259,11 @@ class YouTubeDownloader {
                 title: this.videoData.title
             };
 
-            console.log("🚀 Starting download with data:", downloadData);
+            console.log("🚀 Starting download:", downloadData);
 
             const response = await fetch(API_BASE_URL + "/download", {
                 method: "POST",
+                mode: 'cors',
                 headers: {
                     "Content-Type": "application/json",
                 },
@@ -260,7 +294,9 @@ class YouTubeDownloader {
     async startProgressTracking() {
         this.progressInterval = setInterval(async () => {
             try {
-                const response = await fetch(API_BASE_URL + `/progress/${this.currentDownloadId}`);
+                const response = await fetch(API_BASE_URL + `/progress/${this.currentDownloadId}`, {
+                    mode: 'cors'
+                });
 
                 if (!response.ok) {
                     throw new Error(`HTTP ${response.status}`);
@@ -298,12 +334,10 @@ class YouTubeDownloader {
     }
 
     goToStep(step) {
-        // Hide all steps
         document.querySelectorAll(".step-content").forEach((content) => {
             content.classList.remove("active");
         });
 
-        // Show current step
         const targetStep = document.getElementById(`step${step}`);
         if (targetStep) {
             targetStep.classList.add("active");
@@ -312,7 +346,6 @@ class YouTubeDownloader {
         }
     }
 
-    // Helper methods...
     isValidYouTubeURL(url) {
         const patterns = [
             /^https?:\/\/(www\.)?youtube\.com\/watch\?v=[a-zA-Z0-9_-]{11}/,
@@ -324,6 +357,7 @@ class YouTubeDownloader {
     }
 
     showAlert(elementId, message) {
+        console.log(`⚠️ Showing alert: ${message}`);
         const alertElement = document.getElementById(elementId);
         if (alertElement) {
             alertElement.textContent = message;
@@ -349,39 +383,70 @@ class YouTubeDownloader {
             button.disabled = true;
             if (text) text.style.display = 'none';
             if (loader) loader.style.display = 'flex';
+            console.log(`🔄 Button ${buttonId} set to loading`);
         } else {
             button.disabled = false;
             if (text) text.style.display = 'flex';
             if (loader) loader.style.display = 'none';
+            console.log(`✅ Button ${buttonId} loading removed`);
         }
     }
 
     showToast(message, type = 'info') {
         console.log(`📢 Toast: ${message} (${type})`);
 
-        const toast = document.createElement('div');
-        toast.className = `toast toast-${type}`;
-        toast.innerHTML = `
-            <i class="fas fa-${type === 'success' ? 'check-circle' : 'info-circle'}"></i>
-            <span>${message}</span>
-        `;
-
+        // Create toast container if not exists
         let container = document.getElementById('toastContainer');
         if (!container) {
             container = document.createElement('div');
             container.id = 'toastContainer';
-            container.className = 'toast-container';
             container.style.cssText = `
                 position: fixed;
                 top: 20px;
                 right: 20px;
                 z-index: 9999;
+                pointer-events: none;
             `;
             document.body.appendChild(container);
         }
 
+        // Create toast element
+        const toast = document.createElement('div');
+        toast.style.cssText = `
+            background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'};
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            pointer-events: auto;
+            opacity: 0;
+            transform: translateX(100%);
+            transition: all 0.3s ease;
+        `;
+
+        const icon = type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️';
+        toast.innerHTML = `<span>${icon}</span><span>${message}</span>`;
+
         container.appendChild(toast);
-        setTimeout(() => toast.remove(), 3000);
+
+        // Animate in
+        setTimeout(() => {
+            toast.style.opacity = '1';
+            toast.style.transform = 'translateX(0)';
+        }, 10);
+
+        // Animate out and remove
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateX(100%)';
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
     }
 
     displayVideoPreview(data) {
@@ -394,7 +459,8 @@ class YouTubeDownloader {
         preview.innerHTML = `
             <div class="video-card">
                 <div class="video-thumbnail-wrapper">
-                    <img src="${data.thumbnail}" alt="${data.title}" class="video-thumbnail" onerror="this.style.display='none'">
+                    <img src="${data.thumbnail}" alt="${data.title}" class="video-thumbnail" 
+                         onerror="this.style.display='none'">
                     <div class="video-duration">${duration}</div>
                 </div>
                 <div class="video-info">
@@ -412,6 +478,8 @@ class YouTubeDownloader {
                 </div>
             </div>
         `;
+
+        console.log("✅ Video preview displayed");
     }
 
     displayFormats(data) {
@@ -425,11 +493,13 @@ class YouTubeDownloader {
 
         let html = "";
 
-        Object.keys(formats).sort((a, b) => {
+        const sortedQualities = Object.keys(formats).sort((a, b) => {
             const aHeight = parseInt(a.replace('p', ''));
             const bHeight = parseInt(b.replace('p', ''));
             return bHeight - aHeight;
-        }).forEach(quality => {
+        });
+
+        sortedQualities.forEach(quality => {
             const qualityFormats = formats[quality];
 
             Object.entries(qualityFormats).forEach(([ext, format]) => {
@@ -462,6 +532,8 @@ class YouTubeDownloader {
                 this.selectFormat(card, 'video');
             });
         });
+
+        console.log(`✅ Video formats displayed: ${Object.keys(formats).length} qualities`);
     }
 
     displayAudioFormats(formats) {
@@ -499,6 +571,8 @@ class YouTubeDownloader {
                 this.selectFormat(card, 'audio');
             });
         });
+
+        console.log(`✅ Audio formats displayed`);
     }
 
     selectFormat(card, type) {
@@ -515,6 +589,7 @@ class YouTubeDownloader {
         }
 
         this.hideAlert("formatError");
+        console.log(`✅ Format selected: ${this.selectedFormat.quality} ${this.selectedFormat.ext}`);
     }
 
     switchTab(tab) {
@@ -591,7 +666,7 @@ class YouTubeDownloader {
 function scrollToDownloader() {
     const downloaderSection = document.getElementById('step1');
     if (downloaderSection) {
-        downloaderSection.scrollIntoView({ 
+        downloaderSection.scrollIntoView({
             behavior: 'smooth',
             block: 'start'
         });
@@ -608,45 +683,16 @@ function goToStep(step) {
     }
 }
 
-// Initialize app
-console.log("🔄 Initializing YouTube Downloader Pro...");
+// Initialize when DOM is ready
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('📄 DOM Content Loaded - Initializing App');
+    window.downloader = new YouTubeDownloader();
+});
 
-// Multiple initialization attempts for reliability
-function initializeApp() {
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', () => {
-            window.downloader = new YouTubeDownloader();
-        });
-    } else {
-        window.downloader = new YouTubeDownloader();
-    }
+// Fallback initialization
+if (document.readyState === 'complete') {
+    console.log('📄 Document already loaded - Initializing App');
+    window.downloader = new YouTubeDownloader();
 }
 
-// Test backend connectivity on page load
-async function testBackendConnection() {
-    try {
-        console.log("🔍 Testing backend connection...");
-        const response = await fetch(API_BASE_URL + '/health', { 
-            method: 'GET',
-            mode: 'cors'
-        });
-
-        if (response.ok) {
-            const data = await response.json();
-            console.log("✅ Backend connected successfully:", data);
-        } else {
-            console.error("❌ Backend health check failed:", response.status);
-        }
-    } catch (error) {
-        console.error("❌ Backend connection failed:", error);
-        console.error("🚨 Check if backend URL is correct:", API_BASE_URL);
-    }
-}
-
-// Initialize everything
-initializeApp();
-testBackendConnection();
-
-console.log("🎉 YouTube Downloader Pro setup complete!");
-console.log("🔗 Backend API:", API_BASE_URL);
-console.log("🌐 Frontend URL:", window.location.origin);
+console.log('🎉 App script loaded successfully!');
