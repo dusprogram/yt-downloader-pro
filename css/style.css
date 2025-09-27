@@ -1405,3 +1405,228 @@ input:focus-visible,
     grid-template-columns: 2fr 3fr;
   }
 }
+
+/* Additional CSS for Format Cards Display */
+
+/* Format Cards Container */
+.format-section {
+    display: none;
+    gap: 16px;
+    margin-top: 20px;
+}
+
+.format-section.active {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Individual Format Card */
+.format-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px;
+    border: 2px solid var(--border-color, #e5e7eb);
+    border-radius: 12px;
+    background: var(--card-bg, #ffffff);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-bottom: 12px;
+}
+
+.format-card:hover {
+    border-color: var(--primary-color, #3b82f6);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+}
+
+.format-card.selected {
+    border-color: var(--primary-color, #3b82f6);
+    background: var(--primary-light, #eff6ff);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Format Info Section */
+.format-info {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex: 1;
+}
+
+.format-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 10px;
+    background: var(--icon-bg, #f3f4f6);
+    color: var(--primary-color, #3b82f6);
+    font-size: 20px;
+}
+
+.format-details {
+    flex: 1;
+}
+
+.format-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary, #111827);
+    margin-bottom: 4px;
+}
+
+.format-specs {
+    font-size: 14px;
+    color: var(--text-secondary, #6b7280);
+    margin-bottom: 2px;
+}
+
+.format-type {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-tertiary, #9ca3af);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Format Badge */
+.format-badge {
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.format-badge.video-badge {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.format-badge.audio-badge {
+    background: #dcfce7;
+    color: #166534;
+}
+
+/* No Formats Message */
+.no-formats {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-secondary, #6b7280);
+}
+
+.no-formats i {
+    font-size: 48px;
+    margin-bottom: 16px;
+    display: block;
+    opacity: 0.5;
+}
+
+.no-formats p {
+    font-size: 16px;
+    margin: 0;
+}
+
+/* Tab System */
+.tab-btn {
+    padding: 12px 24px;
+    border: none;
+    background: var(--tab-bg, #f9fafb);
+    color: var(--text-secondary, #6b7280);
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.tab-btn.active {
+    background: var(--primary-color, #3b82f6);
+    color: white;
+}
+
+.tab-btn:hover {
+    background: var(--primary-light, #eff6ff);
+    color: var(--primary-color, #3b82f6);
+}
+
+.tab-btn.active:hover {
+    background: var(--primary-dark, #2563eb);
+    color: white;
+}
+
+/* Download Button */
+#downloadBtn {
+    width: 100%;
+    padding: 16px;
+    background: var(--primary-color, #3b82f6);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 20px;
+}
+
+#downloadBtn:disabled {
+    background: var(--disabled-bg, #d1d5db);
+    color: var(--disabled-text, #9ca3af);
+    cursor: not-allowed;
+}
+
+#downloadBtn:not(:disabled):hover {
+    background: var(--primary-dark, #2563eb);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+/* Dark Theme Support */
+[data-theme="dark"] .format-card {
+    background: #374151;
+    border-color: #4b5563;
+    color: #f9fafb;
+}
+
+[data-theme="dark"] .format-card.selected {
+    background: #1e3a8a;
+    border-color: #3b82f6;
+}
+
+[data-theme="dark"] .format-icon {
+    background: #4b5563;
+}
+
+[data-theme="dark"] .format-title {
+    color: #f9fafb;
+}
+
+[data-theme="dark"] .format-specs {
+    color: #d1d5db;
+}
+
+[data-theme="dark"] .format-type {
+    color: #9ca3af;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .format-card {
+        flex-direction: column;
+        text-align: center;
+        gap: 12px;
+    }
+
+    .format-info {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .format-badge {
+        align-self: stretch;
+        text-align: center;
+    }
+}
