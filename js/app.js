@@ -1,7 +1,6 @@
-// COMPLETE FORMAT DISPLAY & DOWNLOAD FIX
-// Fixed all format display and download issues
+// FIXED APP.JS - Format Display Issue Fixed & Toast Notifications Removed
+// Backend URL: https://yt-downloader-pro-v1-dus.up.railway.app
 
-// ✅ CORRECT Backend URL
 const API_BASE_URL = 'https://yt-downloader-pro-v1-dus.up.railway.app';
 
 console.log('🚀 YouTube Downloader Pro Loading...');
@@ -125,14 +124,11 @@ class YouTubeDownloader {
             if (response.ok) {
                 const data = await response.json();
                 console.log("✅ Backend connected successfully:", data);
-                this.showToast("✅ Backend connected!", "success");
             } else {
                 console.error("❌ Backend health check failed:", response.status);
-                this.showToast("⚠️ Backend issue", "warning");
             }
         } catch (error) {
             console.error("❌ Backend connection failed:", error);
-            this.showToast("❌ Cannot reach backend", "error");
         }
     }
 
@@ -140,7 +136,6 @@ class YouTubeDownloader {
         this.theme = this.theme === "dark" ? "light" : "dark";
         document.documentElement.setAttribute("data-theme", this.theme);
         localStorage.setItem("theme", this.theme);
-        this.showToast(`Switched to ${this.theme} theme`, "success");
     }
 
     handleUrlInput(value) {
@@ -219,7 +214,6 @@ class YouTubeDownloader {
                 console.log("🎬 Video info extracted:", data.title);
                 this.videoData = data;
 
-                // ✅ FIXED: Display preview and formats properly
                 console.log("🖼️ Displaying video preview...");
                 this.displayVideoPreview(data);
 
@@ -231,7 +225,6 @@ class YouTubeDownloader {
                 console.log("📍 Going to step 2...");
                 this.goToStep(2);
 
-                this.showToast("✅ Video info loaded!", "success");
                 console.log("🎉 Process completed successfully!");
             } else {
                 console.error("❌ API returned error:", data.error);
@@ -342,24 +335,18 @@ class YouTubeDownloader {
 
                 Object.entries(qualityFormats).forEach(([ext, format]) => {
                     const fileSize = format.filesize ? this.formatFileSize(format.filesize) : 'Size unknown';
-                    const resolution = `${format.width || 'N/A'}x${format.height || 'N/A'}`;
-                    const fps = format.fps || 30;
 
                     html += `
                         <div class="format-card" data-format='${JSON.stringify(format)}' data-type="video" 
                              onclick="window.downloader.selectFormatCard(this)">
                             <div class="format-info">
-                                <div class="format-icon">
-                                    <i class="fas fa-video"></i>
-                                </div>
                                 <div class="format-details">
-                                    <div class="format-title">${quality} ${ext.toUpperCase()}</div>
-                                    <div class="format-specs">${resolution} • ${fps}fps • ${fileSize}</div>
-                                    <div class="format-type">Video + Audio</div>
+                                    <h4><i class="fas fa-video"></i> ${quality} ${ext.toUpperCase()}</h4>
+                                    <p>${format.width || 'N/A'}x${format.height || 'N/A'} • ${format.fps || 30}fps • ${fileSize}</p>
                                 </div>
                             </div>
-                            <div class="format-badge video-badge">
-                                ${format.has_audio ? 'With Audio' : 'Video Only'}
+                            <div class="format-badge ${format.has_audio ? 'has-audio' : 'video-only'}">
+                                ${format.has_audio ? 'Video + Audio' : 'Video Only'}
                             </div>
                         </div>
                     `;
@@ -405,13 +392,9 @@ class YouTubeDownloader {
                         <div class="format-card" data-format='${JSON.stringify(format)}' data-type="audio"
                              onclick="window.downloader.selectFormatCard(this)">
                             <div class="format-info">
-                                <div class="format-icon">
-                                    <i class="fas fa-music"></i>
-                                </div>
                                 <div class="format-details">
-                                    <div class="format-title">${ext.toUpperCase()} Audio</div>
-                                    <div class="format-specs">${quality} • ${fileSize}</div>
-                                    <div class="format-type">Audio Only</div>
+                                    <h4><i class="fas fa-music"></i> ${quality} ${ext.toUpperCase()}</h4>
+                                    <p>Audio Only • ${fileSize}</p>
                                 </div>
                             </div>
                             <div class="format-badge audio-badge">
@@ -448,12 +431,11 @@ class YouTubeDownloader {
             const downloadBtn = document.getElementById("downloadBtn");
             if (downloadBtn) {
                 downloadBtn.disabled = false;
-                downloadBtn.textContent = "Download Selected Format";
+                downloadBtn.innerHTML = '<i class="fas fa-download"></i> Download Selected Format';
                 console.log("✅ Download button enabled");
             }
 
             this.hideAlert("formatError");
-            this.showToast("✅ Format selected!", "success");
 
         } catch (error) {
             console.error("❌ Error parsing format data:", error);
@@ -492,7 +474,7 @@ class YouTubeDownloader {
         const downloadBtn = document.getElementById("downloadBtn");
         if (downloadBtn) {
             downloadBtn.disabled = true;
-            downloadBtn.textContent = "Select a Format First";
+            downloadBtn.innerHTML = '<i class="fas fa-download"></i> Select a Format First';
         }
 
         console.log(`🎯 Tab switched to: ${tab}`);
@@ -549,7 +531,6 @@ class YouTubeDownloader {
 
                 this.goToStep(3);
                 this.startProgressTracking();
-                this.showToast("✅ Download started!", "success");
             } else {
                 console.error("❌ Download failed:", data.error);
                 this.showAlert("formatError", data.error || "Failed to start download");
@@ -585,7 +566,6 @@ class YouTubeDownloader {
                     console.log("✅ Download completed!");
                     this.goToStep(4);
                     this.setupFinalDownload();
-                    this.showToast("✅ Download completed!", "success");
                 } else if (progress.status === 'error') {
                     clearInterval(this.progressInterval);
                     console.error("❌ Download failed:", progress.message);
@@ -660,7 +640,7 @@ class YouTubeDownloader {
         console.log(`⚠️ Alert: ${message}`);
         const alertElement = document.getElementById(elementId);
         if (alertElement) {
-            alertElement.textContent = message;
+            alertElement.querySelector('span').textContent = message;
             alertElement.classList.add("show");
         }
     }
@@ -678,65 +658,15 @@ class YouTubeDownloader {
 
         if (loading) {
             button.disabled = true;
-            button.textContent = "Loading...";
+            button.querySelector('.btn-text').style.display = 'none';
+            button.querySelector('.btn-loader').style.display = 'flex';
             console.log(`🔄 Button ${buttonId} loading started`);
         } else {
             button.disabled = false;
-            button.textContent = "Get Video Info";
+            button.querySelector('.btn-text').style.display = 'flex';
+            button.querySelector('.btn-loader').style.display = 'none';
             console.log(`✅ Button ${buttonId} loading stopped`);
         }
-    }
-
-    showToast(message, type = 'info') {
-        console.log(`📢 Toast: ${message} (${type})`);
-
-        // Remove existing toasts
-        const existingToasts = document.querySelectorAll('.custom-toast');
-        existingToasts.forEach(toast => toast.remove());
-
-        // Create toast
-        const toast = document.createElement('div');
-        toast.className = 'custom-toast';
-        toast.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 9999;
-            background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : type === 'warning' ? '#f59e0b' : '#3b82f6'};
-            color: white;
-            padding: 16px 24px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.25);
-            font-size: 14px;
-            font-weight: 500;
-            max-width: 300px;
-            opacity: 0;
-            transform: translateX(100%);
-            transition: all 0.3s ease;
-        `;
-
-        const icons = {
-            success: '✅',
-            error: '❌',
-            warning: '⚠️',
-            info: 'ℹ️'
-        };
-
-        toast.innerHTML = `${icons[type]} ${message}`;
-        document.body.appendChild(toast);
-
-        // Animate in
-        setTimeout(() => {
-            toast.style.opacity = '1';
-            toast.style.transform = 'translateX(0)';
-        }, 10);
-
-        // Remove after 3 seconds
-        setTimeout(() => {
-            toast.style.opacity = '0';
-            toast.style.transform = 'translateX(100%)';
-            setTimeout(() => toast.remove(), 300);
-        }, 3000);
     }
 
     formatDuration(seconds) {
