@@ -1,7 +1,7 @@
-// ULTIMATE FRONTEND FIX - This WILL work 100%
-// Fixed all URL and CORS issues based on Railway research
+// COMPLETE FORMAT DISPLAY & DOWNLOAD FIX
+// Fixed all format display and download issues
 
-// ✅ CORRECT Railway URL (.up.railway.app)
+// ✅ CORRECT Backend URL
 const API_BASE_URL = 'https://yt-downloader-pro-v1-dus.up.railway.app';
 
 console.log('🚀 YouTube Downloader Pro Loading...');
@@ -67,7 +67,7 @@ class YouTubeDownloader {
             console.log("✅ Clear URL ready");
         }
 
-        // Get Info Button - ULTIMATE FIX
+        // Get Info Button
         const getInfoBtn = document.getElementById("getInfoBtn");
         if (getInfoBtn) {
             getInfoBtn.addEventListener("click", (e) => {
@@ -80,19 +80,23 @@ class YouTubeDownloader {
             console.error("❌ Get Info button NOT FOUND in DOM!");
         }
 
-        // Download tabs and buttons
+        // Download tabs
         document.querySelectorAll(".tab-btn").forEach((btn) => {
             btn.addEventListener("click", (e) => {
                 const tab = e.target.closest(".tab-btn").getAttribute("data-tab");
+                console.log("🔄 Tab switched to:", tab);
                 this.switchTab(tab);
             });
         });
 
+        // Download button
         const downloadBtn = document.getElementById("downloadBtn");
         if (downloadBtn) {
             downloadBtn.addEventListener("click", () => {
+                console.log("📥 Download button clicked!");
                 this.startDownload();
             });
+            console.log("✅ Download button ready");
         }
 
         console.log("🎉 All event listeners ready!");
@@ -128,7 +132,6 @@ class YouTubeDownloader {
             }
         } catch (error) {
             console.error("❌ Backend connection failed:", error);
-            console.error("🔧 Make sure backend URL is correct:", API_BASE_URL);
             this.showToast("❌ Cannot reach backend", "error");
         }
     }
@@ -187,7 +190,6 @@ class YouTubeDownloader {
         console.log("📤 Request payload:", requestPayload);
 
         try {
-            // ✅ ULTIMATE FETCH WITH PROPER HEADERS
             const response = await fetch(apiUrl, {
                 method: "POST",
                 mode: 'cors',
@@ -216,9 +218,19 @@ class YouTubeDownloader {
             if (data.success) {
                 console.log("🎬 Video info extracted:", data.title);
                 this.videoData = data;
+
+                // ✅ FIXED: Display preview and formats properly
+                console.log("🖼️ Displaying video preview...");
                 this.displayVideoPreview(data);
+
+                console.log("🎨 Displaying formats...");
+                console.log("📊 Video formats:", data.video_formats);
+                console.log("🎵 Audio formats:", data.audio_formats);
                 this.displayFormats(data);
+
+                console.log("📍 Going to step 2...");
                 this.goToStep(2);
+
                 this.showToast("✅ Video info loaded!", "success");
                 console.log("🎉 Process completed successfully!");
             } else {
@@ -227,38 +239,278 @@ class YouTubeDownloader {
             }
 
         } catch (error) {
-            console.error('🚨 API Call Failed:');
-            console.error('- Error Type:', error.constructor.name);
-            console.error('- Error Message:', error.message);
-            console.error('- Full Error:', error);
-
+            console.error('🚨 API Call Failed:', error);
             let userMessage = "Network error. Please try again.";
 
             if (error.message.includes('CORS')) {
                 userMessage = "CORS error - Backend needs configuration fix";
-                console.error("🚨 CORS ERROR: Backend CORS is not properly configured!");
             } else if (error.message.includes('Failed to fetch')) {
                 userMessage = "Cannot connect to backend. Please check your internet.";
-                console.error("🚨 FETCH FAILED: Network connectivity issue");
-            } else if (error.message.includes('500')) {
-                userMessage = "Server error - Please try again later";
-            } else if (error.message.includes('404')) {
-                userMessage = "API endpoint not found";
             }
 
             this.showAlert("urlError", userMessage);
-            console.error("💀 Error message shown to user:", userMessage);
 
         } finally {
             this.setButtonLoading("getInfoBtn", false);
         }
     }
 
+    displayVideoPreview(data) {
+        console.log("🖼️ Creating video preview...");
+        const preview = document.getElementById("videoPreview");
+        if (!preview) {
+            console.error("❌ Video preview element not found!");
+            return;
+        }
+
+        const duration = this.formatDuration(data.duration);
+        const views = this.formatNumber(data.view_count);
+
+        preview.innerHTML = `
+            <div class="video-card">
+                <div class="video-thumbnail-wrapper">
+                    <img src="${data.thumbnail}" alt="${data.title}" class="video-thumbnail" 
+                         onerror="this.style.display='none'" onload="console.log('✅ Thumbnail loaded')">
+                    <div class="video-duration">${duration}</div>
+                </div>
+                <div class="video-info">
+                    <h3 class="video-title">${data.title}</h3>
+                    <div class="video-meta">
+                        <div class="meta-item">
+                            <i class="fas fa-user"></i>
+                            <span>${data.uploader}</span>
+                        </div>
+                        <div class="meta-item">
+                            <i class="fas fa-eye"></i>
+                            <span>${views} views</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        console.log("✅ Video preview displayed successfully");
+    }
+
+    displayFormats(data) {
+        console.log("🎨 Starting format display...");
+        console.log("📊 Received video formats:", data.video_formats);
+        console.log("🎵 Received audio formats:", data.audio_formats);
+
+        // Display both video and audio formats
+        this.displayVideoFormats(data.video_formats || {});
+        this.displayAudioFormats(data.audio_formats || {});
+
+        console.log("✅ Format display completed");
+    }
+
+    displayVideoFormats(formats) {
+        console.log("📹 Displaying video formats...");
+        const container = document.getElementById("videoFormatsContainer");
+
+        if (!container) {
+            console.error("❌ Video formats container not found!");
+            return;
+        }
+
+        console.log("📊 Processing video formats:", formats);
+        let html = "";
+        let formatCount = 0;
+
+        // Check if formats exist and have content
+        if (!formats || Object.keys(formats).length === 0) {
+            console.log("⚠️ No video formats available");
+            html = `
+                <div class="no-formats">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <p>No video formats available for this video</p>
+                </div>
+            `;
+        } else {
+            // Sort qualities (highest first)
+            const sortedQualities = Object.keys(formats).sort((a, b) => {
+                const aHeight = parseInt(a.replace('p', ''));
+                const bHeight = parseInt(b.replace('p', ''));
+                return bHeight - aHeight;
+            });
+
+            console.log("📊 Sorted video qualities:", sortedQualities);
+
+            sortedQualities.forEach(quality => {
+                const qualityFormats = formats[quality];
+                console.log(`🎬 Processing ${quality}:`, qualityFormats);
+
+                Object.entries(qualityFormats).forEach(([ext, format]) => {
+                    const fileSize = format.filesize ? this.formatFileSize(format.filesize) : 'Size unknown';
+                    const resolution = `${format.width || 'N/A'}x${format.height || 'N/A'}`;
+                    const fps = format.fps || 30;
+
+                    html += `
+                        <div class="format-card" data-format='${JSON.stringify(format)}' data-type="video" 
+                             onclick="window.downloader.selectFormatCard(this)">
+                            <div class="format-info">
+                                <div class="format-icon">
+                                    <i class="fas fa-video"></i>
+                                </div>
+                                <div class="format-details">
+                                    <div class="format-title">${quality} ${ext.toUpperCase()}</div>
+                                    <div class="format-specs">${resolution} • ${fps}fps • ${fileSize}</div>
+                                    <div class="format-type">Video + Audio</div>
+                                </div>
+                            </div>
+                            <div class="format-badge video-badge">
+                                ${format.has_audio ? 'With Audio' : 'Video Only'}
+                            </div>
+                        </div>
+                    `;
+                    formatCount++;
+                });
+            });
+        }
+
+        container.innerHTML = html;
+        console.log(`✅ Video formats displayed: ${formatCount} cards`);
+    }
+
+    displayAudioFormats(formats) {
+        console.log("🎵 Displaying audio formats...");
+        const container = document.getElementById("audioFormatsContainer");
+
+        if (!container) {
+            console.error("❌ Audio formats container not found!");
+            return;
+        }
+
+        console.log("🎵 Processing audio formats:", formats);
+        let html = "";
+        let formatCount = 0;
+
+        // Check if formats exist and have content
+        if (!formats || Object.keys(formats).length === 0) {
+            console.log("⚠️ No audio formats available");
+            html = `
+                <div class="no-formats">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <p>No audio formats available for this video</p>
+                </div>
+            `;
+        } else {
+            Object.entries(formats).forEach(([ext, qualities]) => {
+                console.log(`🎵 Processing ${ext}:`, qualities);
+
+                Object.entries(qualities).forEach(([quality, format]) => {
+                    const fileSize = format.filesize ? this.formatFileSize(format.filesize) : 'Size estimated';
+
+                    html += `
+                        <div class="format-card" data-format='${JSON.stringify(format)}' data-type="audio"
+                             onclick="window.downloader.selectFormatCard(this)">
+                            <div class="format-info">
+                                <div class="format-icon">
+                                    <i class="fas fa-music"></i>
+                                </div>
+                                <div class="format-details">
+                                    <div class="format-title">${ext.toUpperCase()} Audio</div>
+                                    <div class="format-specs">${quality} • ${fileSize}</div>
+                                    <div class="format-type">Audio Only</div>
+                                </div>
+                            </div>
+                            <div class="format-badge audio-badge">
+                                Audio Only
+                            </div>
+                        </div>
+                    `;
+                    formatCount++;
+                });
+            });
+        }
+
+        container.innerHTML = html;
+        console.log(`✅ Audio formats displayed: ${formatCount} cards`);
+    }
+
+    // ✅ FIXED: Format selection method
+    selectFormatCard(card) {
+        console.log("🎯 Format card selected:", card);
+
+        // Remove selection from all cards
+        document.querySelectorAll('.format-card').forEach(c => {
+            c.classList.remove('selected');
+        });
+
+        // Add selection to clicked card
+        card.classList.add('selected');
+
+        try {
+            this.selectedFormat = JSON.parse(card.dataset.format);
+            console.log("✅ Selected format:", this.selectedFormat);
+
+            // Enable download button
+            const downloadBtn = document.getElementById("downloadBtn");
+            if (downloadBtn) {
+                downloadBtn.disabled = false;
+                downloadBtn.textContent = "Download Selected Format";
+                console.log("✅ Download button enabled");
+            }
+
+            this.hideAlert("formatError");
+            this.showToast("✅ Format selected!", "success");
+
+        } catch (error) {
+            console.error("❌ Error parsing format data:", error);
+            this.showAlert("formatError", "Error selecting format");
+        }
+    }
+
+    switchTab(tab) {
+        console.log("🔄 Switching to tab:", tab);
+
+        // Update tab buttons
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+
+        // Update tab content
+        document.querySelectorAll('.format-section').forEach(section => {
+            section.classList.remove('active');
+        });
+
+        const targetSection = document.getElementById(`${tab}Section`);
+        if (targetSection) {
+            targetSection.classList.add('active');
+            console.log(`✅ Switched to ${tab} section`);
+        } else {
+            console.error(`❌ Section ${tab}Section not found`);
+        }
+
+        // Clear selection when switching tabs
+        document.querySelectorAll('.format-card').forEach(card => {
+            card.classList.remove('selected');
+        });
+
+        this.selectedFormat = null;
+        const downloadBtn = document.getElementById("downloadBtn");
+        if (downloadBtn) {
+            downloadBtn.disabled = true;
+            downloadBtn.textContent = "Select a Format First";
+        }
+
+        console.log(`🎯 Tab switched to: ${tab}`);
+    }
+
     async startDownload() {
+        console.log("📥 Starting download process...");
+
         if (!this.selectedFormat || !this.videoData) {
+            console.error("❌ No format selected or no video data");
             this.showAlert("formatError", "Please select a format first");
             return;
         }
+
+        console.log("🚀 Download data:", {
+            format: this.selectedFormat,
+            video: this.videoData.title
+        });
 
         try {
             const downloadData = {
@@ -270,7 +522,7 @@ class YouTubeDownloader {
                 title: this.videoData.title
             };
 
-            console.log("🚀 Starting download:", downloadData);
+            console.log("📤 Sending download request:", downloadData);
 
             const response = await fetch(API_BASE_URL + "/download", {
                 method: "POST",
@@ -282,28 +534,36 @@ class YouTubeDownloader {
                 credentials: 'omit'
             });
 
+            console.log("📊 Download response status:", response.status);
+
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
 
             const data = await response.json();
+            console.log("📥 Download response:", data);
 
             if (data.success) {
                 this.currentDownloadId = data.download_id;
+                console.log("🎯 Download ID:", this.currentDownloadId);
+
                 this.goToStep(3);
                 this.startProgressTracking();
                 this.showToast("✅ Download started!", "success");
             } else {
+                console.error("❌ Download failed:", data.error);
                 this.showAlert("formatError", data.error || "Failed to start download");
             }
 
         } catch (error) {
-            console.error('Download Error:', error);
+            console.error('❌ Download Error:', error);
             this.showAlert("formatError", "Network error. Please try again.");
         }
     }
 
     async startProgressTracking() {
+        console.log("📊 Starting progress tracking for:", this.currentDownloadId);
+
         this.progressInterval = setInterval(async () => {
             try {
                 const response = await fetch(API_BASE_URL + `/progress/${this.currentDownloadId}`, {
@@ -317,21 +577,24 @@ class YouTubeDownloader {
                 }
 
                 const progress = await response.json();
+                console.log("📊 Progress update:", progress);
                 this.updateProgress(progress);
 
                 if (progress.status === 'completed') {
                     clearInterval(this.progressInterval);
+                    console.log("✅ Download completed!");
                     this.goToStep(4);
                     this.setupFinalDownload();
                     this.showToast("✅ Download completed!", "success");
                 } else if (progress.status === 'error') {
                     clearInterval(this.progressInterval);
+                    console.error("❌ Download failed:", progress.message);
                     this.showAlert("formatError", progress.message || "Download failed");
                     this.goToStep(2);
                 }
 
             } catch (error) {
-                console.error('Progress Error:', error);
+                console.error('❌ Progress tracking error:', error);
             }
         }, 1000);
     }
@@ -344,22 +607,45 @@ class YouTubeDownloader {
                 console.log("📥 Opening download:", downloadUrl);
                 window.open(downloadUrl, '_blank');
             };
+            console.log("✅ Final download button configured");
         }
     }
 
     goToStep(step) {
+        console.log(`📍 Going to step ${step}`);
+
+        // Hide all steps
         document.querySelectorAll(".step-content").forEach((content) => {
             content.classList.remove("active");
         });
 
+        // Show target step
         const targetStep = document.getElementById(`step${step}`);
         if (targetStep) {
             targetStep.classList.add("active");
             this.currentStep = step;
             window.scrollTo({ top: 0, behavior: "smooth" });
+            console.log(`✅ Now on step ${step}`);
+        } else {
+            console.error(`❌ Step ${step} element not found!`);
         }
     }
 
+    updateProgress(progress) {
+        const percent = document.getElementById("progressPercent");
+        const status = document.getElementById("progressStatus");
+
+        if (percent) {
+            percent.textContent = `${progress.progress || 0}%`;
+        }
+        if (status) {
+            status.textContent = progress.message || 'Processing...';
+        }
+
+        console.log(`📊 Progress: ${progress.progress}% - ${progress.message}`);
+    }
+
+    // Helper methods
     isValidYouTubeURL(url) {
         const patterns = [
             /^https?:\/\/(www\.)?youtube\.com\/watch\?v=[a-zA-Z0-9_-]{11}/,
@@ -389,9 +675,6 @@ class YouTubeDownloader {
     setButtonLoading(buttonId, loading) {
         const button = document.getElementById(buttonId);
         if (!button) return;
-
-        const text = button.querySelector('.btn-text');
-        const loader = button.querySelector('.btn-loader');
 
         if (loading) {
             button.disabled = true;
@@ -448,182 +731,12 @@ class YouTubeDownloader {
             toast.style.transform = 'translateX(0)';
         }, 10);
 
-        // Remove after 4 seconds
+        // Remove after 3 seconds
         setTimeout(() => {
             toast.style.opacity = '0';
             toast.style.transform = 'translateX(100%)';
             setTimeout(() => toast.remove(), 300);
-        }, 4000);
-    }
-
-    displayVideoPreview(data) {
-        const preview = document.getElementById("videoPreview");
-        if (!preview) return;
-
-        const duration = this.formatDuration(data.duration);
-        const views = this.formatNumber(data.view_count);
-
-        preview.innerHTML = `
-            <div class="video-card">
-                <div class="video-thumbnail-wrapper">
-                    <img src="${data.thumbnail}" alt="${data.title}" class="video-thumbnail" 
-                         onerror="this.style.display='none'">
-                    <div class="video-duration">${duration}</div>
-                </div>
-                <div class="video-info">
-                    <h3 class="video-title">${data.title}</h3>
-                    <div class="video-meta">
-                        <div class="meta-item">
-                            <i class="fas fa-user"></i>
-                            <span>${data.uploader}</span>
-                        </div>
-                        <div class="meta-item">
-                            <i class="fas fa-eye"></i>
-                            <span>${views} views</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-    }
-
-    displayFormats(data) {
-        this.displayVideoFormats(data.video_formats || {});
-        this.displayAudioFormats(data.audio_formats || {});
-    }
-
-    displayVideoFormats(formats) {
-        const container = document.getElementById("videoFormatsContainer");
-        if (!container) return;
-
-        let html = "";
-
-        const sortedQualities = Object.keys(formats).sort((a, b) => {
-            const aHeight = parseInt(a.replace('p', ''));
-            const bHeight = parseInt(b.replace('p', ''));
-            return bHeight - aHeight;
-        });
-
-        sortedQualities.forEach(quality => {
-            const qualityFormats = formats[quality];
-
-            Object.entries(qualityFormats).forEach(([ext, format]) => {
-                const fileSize = format.filesize ? this.formatFileSize(format.filesize) : 'Unknown';
-
-                html += `
-                    <div class="format-card" data-format='${JSON.stringify(format)}' data-type="video">
-                        <div class="format-info">
-                            <div class="format-details">
-                                <h4><i class="fas fa-video"></i> ${quality} ${ext.toUpperCase()}</h4>
-                                <p>${format.width || 'N/A'}x${format.height || 'N/A'} • ${format.fps || 30}fps • ${fileSize}</p>
-                            </div>
-                        </div>
-                        <div class="format-badge ${format.has_audio ? 'has-audio' : 'video-only'}">
-                            ${format.has_audio ? 'Video + Audio' : 'Video Only'}
-                        </div>
-                    </div>
-                `;
-            });
-        });
-
-        if (!html) {
-            html = '<div class="no-formats">No video formats available</div>';
-        }
-
-        container.innerHTML = html;
-
-        container.querySelectorAll('.format-card').forEach(card => {
-            card.addEventListener('click', () => {
-                this.selectFormat(card, 'video');
-            });
-        });
-    }
-
-    displayAudioFormats(formats) {
-        const container = document.getElementById("audioFormatsContainer");
-        if (!container) return;
-
-        let html = "";
-
-        Object.entries(formats).forEach(([ext, qualities]) => {
-            Object.entries(qualities).forEach(([quality, format]) => {
-                const fileSize = format.filesize ? this.formatFileSize(format.filesize) : 'Estimated';
-
-                html += `
-                    <div class="format-card" data-format='${JSON.stringify(format)}' data-type="audio">
-                        <div class="format-info">
-                            <div class="format-details">
-                                <h4><i class="fas fa-music"></i> ${quality} ${ext.toUpperCase()}</h4>
-                                <p>Audio Only • ${fileSize}</p>
-                            </div>
-                        </div>
-                        <div class="format-badge audio-badge">Audio</div>
-                    </div>
-                `;
-            });
-        });
-
-        if (!html) {
-            html = '<div class="no-formats">No audio formats available</div>';
-        }
-
-        container.innerHTML = html;
-
-        container.querySelectorAll('.format-card').forEach(card => {
-            card.addEventListener('click', () => {
-                this.selectFormat(card, 'audio');
-            });
-        });
-    }
-
-    selectFormat(card, type) {
-        document.querySelectorAll('.format-card').forEach(c => {
-            c.classList.remove('selected');
-        });
-
-        card.classList.add('selected');
-        this.selectedFormat = JSON.parse(card.dataset.format);
-
-        const downloadBtn = document.getElementById("downloadBtn");
-        if (downloadBtn) {
-            downloadBtn.disabled = false;
-        }
-
-        this.hideAlert("formatError");
-    }
-
-    switchTab(tab) {
-        document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.classList.remove('active');
-        });
-        document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
-
-        document.querySelectorAll('.format-section').forEach(section => {
-            section.classList.remove('active');
-        });
-        document.getElementById(`${tab}Section`).classList.add('active');
-
-        document.querySelectorAll('.format-card').forEach(card => {
-            card.classList.remove('selected');
-        });
-
-        this.selectedFormat = null;
-        const downloadBtn = document.getElementById("downloadBtn");
-        if (downloadBtn) {
-            downloadBtn.disabled = true;
-        }
-    }
-
-    updateProgress(progress) {
-        const percent = document.getElementById("progressPercent");
-        const status = document.getElementById("progressStatus");
-        const speed = document.getElementById("downloadSpeed");
-        const eta = document.getElementById("timeRemaining");
-
-        if (percent) percent.textContent = `${progress.progress}%`;
-        if (status) status.textContent = progress.message || 'Processing...';
-        if (speed) speed.textContent = progress.speed || '--';
-        if (eta) eta.textContent = progress.eta || '--';
+        }, 3000);
     }
 
     formatDuration(seconds) {
